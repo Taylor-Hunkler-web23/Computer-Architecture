@@ -11,13 +11,29 @@ class CPU:
         """Construct a new CPU."""
         pass
     #Add list properties to the CPU class to hold 256 bytes of memory
-        self.memory = [0] * 256
+        self.ram = [0] * 256
 
      # and 8 general-purpose registers
-        self.register =[0] * 8
+        self.reg =[0] * 8
 
         #Also add properties for any internal registers you need, e.g. PC.
         self.pc = 0
+
+
+#The MAR contains the address that is being read or written to. 
+# The MDR contains the data that was read or the data to write.
+#ram_read() should accept the address to read and return the value stored there.
+    def ram_read(self,MAR):
+        return self.ram[MAR]
+        
+        
+#raw_write() should accept a value to write, and the address to write it to.       
+    def ram_write(self, MDR, MAR):
+         self.ram[MAR]=MDR
+
+
+
+
 
     def load(self):
         """Load a program into memory."""
@@ -71,5 +87,16 @@ class CPU:
         print()
 
     def run(self):
+
+       
+
+        
+        #It needs to read the memory address that’s stored in register PC, and store that result in IR,
+        ir = self.ram_read(self.pc)
+
+        #Using ram_read(), read the bytes at PC+1 and PC+2 from RAM into variables operand_a and operand_b in case the instruction needs them.
+
+        opperand_a = self.ram_read(self.pc+1)
+        opperand_b = self.ram_read(self.pc+2)
         """Run the CPU."""
         pass
