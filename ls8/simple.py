@@ -15,7 +15,7 @@ memory = [
   SAVE,
   20,
   3,
-  ADD,
+  ADD, #reg 2 + reg 3
   2,
   3,
   PRINT_REGISTER, #print register 2
