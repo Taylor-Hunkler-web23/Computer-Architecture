@@ -1,6 +1,9 @@
 """CPU functionality."""
 
 import sys
+LDI = 0b10000010 #LDI: load "immediate", store a value in a register, or "set this register to this value".
+PRN = 0b01000111 #print: : a pseudo-instruction that prints the numeric value stored in a register.
+HLT = 0b00000001 #halt: halt the CPU and exit the emulator.
 
 class CPU:
     """Main CPU class."""
@@ -9,7 +12,7 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        
     #Add list properties to the CPU class to hold 256 bytes of memory
         self.ram = [0] * 256
 
@@ -20,22 +23,13 @@ class CPU:
         self.pc = 0
 
 
-#The MAR contains the address that is being read or written to. 
-# The MDR contains the data that was read or the data to write.
-#ram_read() should accept the address to read and return the value stored there.
-    def ram_read(self,MAR):
-        return self.ram[MAR]
-        
-        
-#raw_write() should accept a value to write, and the address to write it to.       
-    def ram_write(self, MDR, MAR):
-         self.ram[MAR]=MDR
-
 
 
 
 
     def load(self):
+
+        
         """Load a program into memory."""
 
         address = 0
@@ -56,6 +50,8 @@ class CPU:
             self.ram[address] = instruction
             address += 1
 
+            
+
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -65,6 +61,7 @@ class CPU:
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
+
 
     def trace(self):
         """
@@ -85,18 +82,53 @@ class CPU:
             print(" %02X" % self.reg[i], end='')
 
         print()
-
-    def run(self):
-
-       
-
+    
+#The MAR contains the address that is being read or written to. 
+# The MDR contains the data that was read or the data to write.
+#ram_read() should accept the address to read and return the value stored there.
+    def ram_read(self,MAR):
+        return self.ram[MAR]
         
-        #It needs to read the memory address that’s stored in register PC, and store that result in IR,
-        ir = self.ram_read(self.pc)
+        
+#raw_write() should accept a value to write, and the address to write it to.       
+    def ram_write(self,MDR, MAR):
+         self.ram[MAR] =MDR
 
-        #Using ram_read(), read the bytes at PC+1 and PC+2 from RAM into variables operand_a and operand_b in case the instruction needs them.
 
-        opperand_a = self.ram_read(self.pc+1)
-        opperand_b = self.ram_read(self.pc+2)
-        """Run the CPU."""
-        pass
+    def run(self):       
+
+        running =True
+        while running:         
+                   
+            #It needs to read the memory address that’s stored in register PC, and store that result in IR,
+            ir = self.ram_read(self.pc) #instruction register
+
+            #Using ram_read(), read the bytes at PC+1 and PC+2 from RAM into variables operand_a and operand_b in case the instruction needs them.
+            opperand_a = self.ram_read(self.pc+1) #reg index
+            # print(opperand_a,'A')
+            opperand_b = self.ram_read(self.pc+2) # value 8
+            # print(opperand_b,'B')
+            
+            """Run the CPU."""
+            if ir == LDI:
+                #store 8 in reg index 0
+                self.reg[opperand_a]= opperand_b
+                #3 byte instruction
+                self.pc +=3
+
+            elif ir ==PRN:
+               
+                reg=self.ram_read(self.pc+1) 
+
+                print(self.reg[reg], 'reg')
+              #2 byte instruction
+                self.pc +=2
+
+            elif ir == HLT:
+                print("Stop run")
+                running = False
+                sys.exit
+
+            else:
+                print("Unknown instruction")
+                sys.exit
