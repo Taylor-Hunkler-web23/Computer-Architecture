@@ -1,12 +1,21 @@
 """CPU functionality."""
 
 import sys
-print(sys.argv, "arg")
+# print(sys.argv, "arg")
+
 #op codes, representing the bytes in memory
 LDI = 0b10000010 #LDI: load "immediate", store a value in a register, or "set this register to this value".
 PRN = 0b01000111 #print: : a pseudo-instruction that prints the numeric value stored in a register.
 HLT = 0b00000001 #halt: halt the CPU and exit the emulator.
-MUL = 0b10100010
+MUL = 0b10100010 #MUL: multipy registerA registerB
+PUSH = 0b01000101 #PUSH:Push the value in the given register on the stack.
+POP = 0b01000110 #POP:Pop the value at the top of the stack into the given register.
+
+#stack pointer
+# SP=7
+
+
+
 class CPU:
     """Main CPU class."""
 
@@ -22,7 +31,11 @@ class CPU:
         self.reg =[0] * 8
 
         #Also add properties for any internal registers you need, e.g. PC.
+        #program counter  
         self.pc = 0
+        self.sp=7
+
+        
 
 
 
@@ -34,8 +47,7 @@ class CPU:
         
         """Load a program into memory."""
 #address to write at
-        address = 0
-       
+        address = 0      
 
         
         try:
@@ -92,7 +104,7 @@ class CPU:
 
         elif op == "MUL":
         #Multiply the values in two registers together and store the result in registerA.
-            self.reg[reg_a] =(self.reg[reg_a] * self.reg[reg_b])
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -134,15 +146,16 @@ class CPU:
 
 
         running =True
-        while running:         
+        while running:    
                    
             #It needs to read the memory address that’s stored in register PC, and store that result in IR,
             ir = self.ram_read(self.pc) #instruction register
+            
 
             #Using ram_read(), read the bytes at PC+1 and PC+2 from RAM into variables operand_a and operand_b in case the instruction needs them.
             opperand_a = self.ram_read(self.pc+1) #reg index
             # print(opperand_a,'A')
-            opperand_b = self.ram_read(self.pc+2) # value 8
+            opperand_b = self.ram_read(self.pc+2) # value 
             # print(opperand_b,'B')
 
             """Run the CPU."""
@@ -162,11 +175,38 @@ class CPU:
 
             elif ir ==PRN:
                
-                # reg=self.ram_read(self.pc+1) 
                 #Print numeric value stored in the given register.
                 print(self.reg[opperand_a])
+                
               #2 byte instruction
                 self.pc +=2
+
+            #storing on the stack
+            elif ir == PUSH:
+                SP=self.sp
+                #register number
+                reg = self.ram[self.pc + 1]
+                #value in register
+                val = self.reg[reg]
+                # Decrement the SP.
+                self.reg[SP] -= 1
+                # Copy the value in the given register to the address pointed to by SP.
+                self.ram[self.reg[SP]] = val
+                #2 byte instruction, add 2 program counter
+                self.pc += 2
+
+        #removing from the stack
+            elif ir == POP:
+                #pop it into this register address
+                reg = self.ram[self.pc + 1]
+                #wherever stack pointer is pointing, get value out of memory
+                val = self.ram[self.reg[SP]]
+                # Copy the value from the address pointed to by SP to the given register.
+                self.reg[reg] = val
+                # Increment SP.
+                self.reg[SP] += 1
+                #2 byte instruction
+                self.pc += 2
 
             elif ir == HLT:
                 print("Stop run")
