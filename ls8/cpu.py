@@ -10,9 +10,11 @@ HLT = 0b00000001 #halt: halt the CPU and exit the emulator.
 MUL = 0b10100010 #MUL: multipy registerA registerB
 PUSH = 0b01000101 #PUSH:Push the value in the given register on the stack.
 POP = 0b01000110 #POP:Pop the value at the top of the stack into the given register.
-
+CALL = 0b01010000
+RET = 0b00010001
+ADD = 0b10100000
 #stack pointer
-# SP=7
+SP=7
 
 
 
@@ -33,7 +35,7 @@ class CPU:
         #Also add properties for any internal registers you need, e.g. PC.
         #program counter  
         self.pc = 0
-        self.sp=7
+        # self.sp=7
 
         
 
@@ -150,6 +152,10 @@ class CPU:
                    
             #It needs to read the memory address that’s stored in register PC, and store that result in IR,
             ir = self.ram_read(self.pc) #instruction register
+
+            #shifts bits to read first two numbers of opcode
+            # first2 = ir>>6
+            
             
 
             #Using ram_read(), read the bytes at PC+1 and PC+2 from RAM into variables operand_a and operand_b in case the instruction needs them.
@@ -172,6 +178,13 @@ class CPU:
             #3 byte instruction               
                 self.pc +=3
 
+            elif ir ==ADD:
+
+                self.alu("ADD", opperand_a,opperand_b)
+                self.pc +=3
+
+
+
 
             elif ir ==PRN:
                
@@ -183,7 +196,7 @@ class CPU:
 
             #storing on the stack
             elif ir == PUSH:
-                SP=self.sp
+                # SP=self.sp
                 #register number
                 reg = self.ram[self.pc + 1]
                 #value in register
@@ -208,6 +221,33 @@ class CPU:
                 #2 byte instruction
                 self.pc += 2
 
+
+            elif ir == CALL:
+                # The address of the instruction directly after CALL is pushed onto the stack.
+                # This allows us to return to where we left off when the subroutine finishes executing.
+
+                #decrement SP
+                self.reg[SP] -= 1
+
+                # push return address on stack, return address = pc+2
+                self.ram[self.reg[SP]] = self.pc + 2
+
+                # The PC is set to the address stored in the given register.
+                # We jump to that location in RAM and execute the first instruction in the subroutine.
+                # The PC can move forward or backwards from its current location.
+
+                #set the pc to value in register
+                reg = self.ram[self.pc + 1]
+                #set pc to value in register
+                self.pc = self.reg[reg]
+
+            elif ir == RET:
+                # Return from subroutine.
+                # Pop the value from the top of the stack 
+                self.pc = self.ram[self.reg[SP]]
+                #and store it in the PC.
+                self.reg[SP] += 1
+
             elif ir == HLT:
                 print("Stop run")
                 running = False
@@ -216,3 +256,6 @@ class CPU:
             else:
                 print("Unknown instruction")
                 sys.exit
+
+            #increments pc by first 2 numbers of op code +1
+            # self.pc += first2 +1
